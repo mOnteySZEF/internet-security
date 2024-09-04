@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Haseł</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+  }
+  .container {
+    max-width: 400px;
+    margin: 50px auto;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+  }
+  h1 {
+    color: #333;
+  }
+  label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+  }
+  input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    color: #333;
+    display: none;
+  }
+  .copy-icon {
+    margin-left: 5px;
+    cursor: pointer;
+    color: #007bff;
+  }
+  .error-message {
+    color: red;
+    margin-top: 5px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Generator Haseł</h1>
+    <div>
+      <label for="length">Długość hasła:</label>
+      <input type="number" id="length" min="5" max="100" placeholder="Wpisz długość hasła">
+      <div id="length-error" class="error-message"></div>
+    </div>
+    <div>
+      <button onclick="generatePassword()">Generuj hasło</button>
+    </div>
+    <div>
+      <label for="result">Twoje hasło:</label>
+      <input type="text" id="result" readonly>
+      <i class="far fa-copy copy-icon" onclick="copyPassword()"></i>
+    </div>
+  </div>
+
+  <script>
+    function generatePassword() {
+      var length = document.getElementById("length").value;
+      if (length === "" || length < 5) {
+        document.getElementById("length-error").textContent = "Wpisz długość hasła (min. 5)";
+        return;
+      } else {
+        document.getElementById("length-error").textContent = "";
+      }
+      if (length === "" || length > 100) {
+        document.getElementById("length-error").textContent = "Wpisz długość hasła (max. 100)";
+        return;
+      } else {
+        document.getElementById("length-error").textContent = "";
+      }
+      var charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+      var password = "";
+      for (var i = 0; i < length; ++i) {
+        var charIndex = Math.floor(Math.random() * charset.length);
+        password += charset[charIndex];
+      }
+      document.getElementById("result").value = password;
+      document.getElementById("result").style.display = "inline";
+    }
+
+    function copyPassword() {
+      var passwordField = document.getElementById("result");
+      passwordField.select();
+      document.execCommand("copy");
+      alert("Hasło skopiowane do schowka!");
+    }
+  </script>
+</body>
+</html>

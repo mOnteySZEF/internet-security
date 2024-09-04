@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Game</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #111;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #fff;
+    }
+
+
+    #gameContainer {
+        position: relative;
+        width: 550px; 
+        height: 550px; 
+        background-color: #000;
+        border: 2px solid #fff;
+        background-image: url('assets/space_background.png'); 
+        background-size: cover;
+    }
+
+    #gameArea {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); 
+    }
+
+    #ship {
+        width: 40px;
+        height: 80px;
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        background-image: url('assets/rocket.png'); 
+        background-size: cover;
+    }
+
+    .asteroid {
+        width: 40px;
+        height: 40px;
+        position: absolute;
+        background-image: url('assets/asteroid.png'); 
+        background-size: cover;
+    }
+
+    .bullet {
+        width: 4px; 
+        height: 18px;
+        position: absolute;
+        background-color: #ff5100; 
+        left: 50%; 
+        transform: translateX(-50%); 
+    }
+
+    #score {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 18px;
+    }
+
+    #notification {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        padding: 20px;
+        display: none;
+    }
+
+    #gameTitle {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 25px;
+        text-align: center;
+    }
+
+    #instructions {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 14px;
+        text-align: center;
+    }
+    button {
+            position: absolute;
+            padding: 5px 10px;
+            font-size: 16px;
+            bottom: 45px;
+            left: 44%;
+            cursor: pointer;
+            background-color: #9ca4a3; 
+            color: white; 
+            border: 1px solid #828e8f; 
+            border-radius: 5px; 
+        }
+
+        button:hover {
+            background-color: #8f9c9c; 
+        }
+
+        button:active {
+            background-color: #81898a; 
+        }
+</style>
+</head>
+<body>
+    <div id="gameTitle"><h3>Space Game</h3></div>
+    <div id="instructions"> <button onclick="OpenIndex()">Wróć</button> <br><br><br>Do poruszania się używaj klawiszy strzałek < >. Zbieraj punkty, unikając asteroid.<br> Nie trafione strzały = więcej asteroid</div>
+<div id="gameContainer">
+    <div id="gameArea">
+        <div id="ship"></div>
+        <div id="score">Punkty: <span id="scoreValue">0</span></div>
+    </div>
+    <div id="notification"></div>
+</div>
+
+<script>
+        function OpenIndex()
+        {
+            var newPath = "index.html";
+            window.location.href = newPath;
+        }
+
+document.addEventListener("DOMContentLoaded", function() {
+    const ship = document.getElementById("ship");
+    const scoreValue = document.getElementById("scoreValue");
+    const gameArea = document.getElementById("gameArea");
+    const notification = document.getElementById("notification");
+    let score = 0;
+    let gamePaused = false;
+    let canShoot = true; 
+
+    const customNotifications = new Map([
+    [5, "<strong>Punkt przywracania systemu:</strong><br>Punkt przywracania systemu to wbudowana funkcja w systemach Windows, która umożliwia przywrócenie komputera do wcześniejszego stanu, w przypadku wystąpienia problemów. Jest to przydatne narzędzie w przypadku uszkodzenia systemu przez złośliwe oprogramowanie lub błędne aktualizacje. Aby skorzystać z punktu przywracania systemu, należy regularnie tworzyć punkty przywracania, co można zrobić ręcznie lub skonfigurować automatyczne tworzenie."],
+    [10, "<strong>Systemowy firewall:</strong><br>Firewall to narzędzie zapewniające kontrolę nad ruchem sieciowym do i z komputera, chroniąc go przed nieautoryzowanym dostępem. W systemach Windows istnieje wbudowany firewall, który można skonfigurować w celu blokowania niechcianych połączeń przychodzących i wychodzących. Konfiguracja firewalla powinna być dostosowana do indywidualnych potrzeb użytkownika i uwzględniać zabezpieczenie przed atakami z zewnątrz oraz kontrolę aplikacji wychodzących."],
+    [15, "<strong>Program antywirusowy:</strong><br>Program antywirusowy jest kluczowym elementem ochrony komputera przed złośliwym oprogramowaniem, takim jak wirusy, trojany, czy programy szpiegujące. Skuteczny program antywirusowy powinien regularnie skanować system w poszukiwaniu potencjalnych zagrożeń, a także zapewniać ochronę w czasie rzeczywistym podczas korzystania z internetu. Ważne jest, aby program antywirusowy był regularnie aktualizowany, aby zapewnić ochronę przed najnowszymi zagrożeniami."],
+    [20, "<strong>Weryfikacja dwuetapowa:</strong><br>Weryfikacja dwuetapowa (lub autoryzacja dwuetapowa) to dodatkowa warstwa zabezpieczeń, która wymaga od użytkownika wprowadzenia dwóch niezależnych metod uwierzytelniania przed uzyskaniem dostępu do konta lub systemu. Typowe metody weryfikacji dwuetapowej obejmują wprowadzenie hasła oraz użycie unikatowego kodu generowanego na przykład przez aplikację mobilną lub wysłanego na podany numer telefonu. Wprowadzenie weryfikacji dwuetapowej znacząco zwiększa bezpieczeństwo konta, nawet jeśli hasło zostanie skradzione."],
+    [25, "<strong>Tworzenie silnego hasła:</strong><br>Silne hasło to kluczowy element ochrony konta użytkownika oraz danych przechowywanych na komputerze. Zaleca się, aby silne hasło składało się z kombinacji małych i wielkich liter, cyfr oraz znaków specjalnych, miało długość co najmniej 8 znaków i nie było łatwe do odgadnięcia. Wskazane jest unikanie używania łatwo dostępnych informacji osobistych w haśle, takich jak imię, nazwisko czy data urodzenia."],
+    [30, "<strong>Szyfrowanie dysków:</strong><br>Szyfrowanie dysków zapewnia dodatkową ochronę danych poprzez zaszyfrowanie ich treści, co uniemożliwia dostęp osobom nieuprawnionym nawet w przypadku kradzieży lub utraty urządzenia. W systemach Windows istnieje wbudowane narzędzie BitLocker, umożliwiające szyfrowanie dysków, podczas gdy dla systemów macOS dostępne jest narzędzie FileVault. Szyfrowanie dysków można również stosować na poziomie aplikacji, np. poprzez stosowanie zaszyfrowanych kontenerów lub plików."]
+    ]);
+
+
+
+    function moveShip(event) {
+        if (gamePaused) return;
+
+        const key = event.key;
+        const shipPosition = ship.offsetLeft;
+
+        if (key === "ArrowLeft" && shipPosition > 0) {
+            ship.style.left = shipPosition - 10 + "px";
+        } else if (key === "ArrowRight" && shipPosition < gameArea.offsetWidth - ship.offsetWidth) {
+            ship.style.left = shipPosition + 10 + "px";
+        } else if (key === " " && canShoot) { 
+            fireBullet();
+            canShoot = false; 
+            setTimeout(() => {
+                canShoot = true; 
+            }, 500); 
+        }
+    }
+
+    function createAsteroid()
+    {
+        const asteroid = document.createElement("div");
+        asteroid.className = "asteroid";
+        asteroid.style.left = Math.floor(Math.random() * (gameArea.offsetWidth - 20)) + "px";
+        gameArea.appendChild(asteroid);
+
+        moveAsteroid(asteroid);
+    }
+
+    function moveAsteroid(asteroid) {
+        let position = 0;
+
+        const moveInterval = setInterval(() => {
+            if (gamePaused) return;
+
+            position += 4;
+            asteroid.style.top = position + "px";
+
+            if (position > gameArea.offsetHeight) {
+                clearInterval(moveInterval);
+                asteroid.remove();
+            }
+
+            if (checkCollision(ship, asteroid)) {
+                clearInterval(moveInterval);
+                asteroid.remove();
+                score++;
+                scoreValue.textContent = score;
+                if (customNotifications.has(score)) {
+                    showNotification(customNotifications.get(score), 13000);
+                    gamePaused = true;
+                } else {
+                    gamePaused = false;
+                }
+                createAsteroid();
+            }
+        }, 50);
+    }
+
+    function fireBullet() {
+        const bullet = document.createElement("div");
+        bullet.className = "bullet";
+        bullet.style.left = ship.offsetLeft + ship.offsetWidth / 2 + "px"; 
+        bullet.style.bottom = ship.offsetHeight + "px";
+        gameArea.appendChild(bullet);
+
+        const moveInterval = setInterval(() => {
+            if (gamePaused) return;
+
+            const bulletPosition = parseInt(bullet.style.bottom);
+            bullet.style.bottom = (bulletPosition + 20) + "px"; 
+
+            if (bulletPosition > gameArea.offsetHeight) {
+                clearInterval(moveInterval);
+                bullet.remove();
+                createAsteroid();
+            }
+
+
+            const asteroids = document.querySelectorAll('.asteroid');
+            asteroids.forEach(asteroid => {
+                if (checkCollision(bullet, asteroid)) {
+                    clearInterval(moveInterval);
+                    bullet.remove();
+                    asteroid.remove();
+                    score++;
+                    scoreValue.textContent = score;
+                    if (customNotifications.has(score)) {
+                        showNotification(customNotifications.get(score), 13000);
+                        gamePaused = true;
+                    } else {
+                        gamePaused = false;
+                    }
+                    createAsteroid();
+                }
+            });
+        }, 50);
+    }
+
+    let asteroidCount = 0;
+
+function createAsteroidWithDelay() {
+    if (asteroidCount < 3) {
+        createAsteroid();
+        asteroidCount++;
+    }
+    if (asteroidCount < 3) {
+        setTimeout(createAsteroidWithDelay, 2000);
+    }
+}
+
+
+
+
+    function checkCollision(element1, element2) {
+        const rect1 = element1.getBoundingClientRect();
+        const rect2 = element2.getBoundingClientRect();
+        return !(rect1.right < rect2.left || 
+                 rect1.left > rect2.right || 
+                 rect1.bottom < rect2.top || 
+                 rect1.top > rect2.bottom);
+    }
+
+    function showNotification(message, duration) {
+    notification.innerHTML = message;
+    notification.style.display = "block";
+
+    setTimeout(() => {
+        notification.style.display = "none";
+        gamePaused = false;
+    }, duration);
+}
+
+    document.addEventListener("keydown", moveShip);
+
+
+    createAsteroidWithDelay();
+});
+</script>
+</body>
+</html>

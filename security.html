@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprawdzanie Siły Hasła</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 400px;
+        margin: 50px auto;
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        padding-bottom: 60px;
+        box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+        color: #333;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+    }
+
+    input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        margin-top: 10px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        color: #333;
+        display: none;
+    }
+
+    .copy-icon {
+        margin-left: 5px;
+        cursor: pointer;
+        color: #007bff;
+    }
+
+    .error-message {
+        color: red;
+        margin-top: 5px;
+    }
+
+    .line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .password-input {
+        width: calc(100% - 40px);
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+        display: inline-block;
+    }
+
+    .password-toggle {
+        width: 35px;
+        padding: 7px 5px;
+        padding-left: 15px;
+        margin-bottom: 10px;
+        border: 1px solid #9e9e9e;
+        border-radius: 3px;
+        cursor: pointer;
+        display: inline-block;
+    }
+
+    .password-strength-meter {
+        height: 10px;
+        background-color: #f4f4f4;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        overflow: hidden;
+    }
+
+    .password-strength-bar {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.5s ease-in-out;
+    }
+
+    .password-strength-text {
+        font-weight: bold;
+        margin-top: 5px;
+    }
+
+    .password-strength-text.invalid {
+        color: #ff0000;
+    }
+
+    .very-weak { background-color: #ff7f7f; }
+    .weak { background-color: #ffbf7f; }
+    .medium { background-color: #ffff7f; }
+    .strong { background-color: #7fff7f; }
+    .very-strong { background-color: #00ff00; }
+
+    .password-toggle i {
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Sprawdzanie Siły Hasła</h1>
+    <form>
+        <div class="line">
+            <input type="password" id="password" name="password" class="password-input" onkeyup="checkPasswordStrength()">
+        </div>
+        <div class="password-strength-meter">
+            <div id="password-strength-bar" class="password-strength-bar"></div>
+        </div>
+        <div id="password-strength-text" class="password-strength-text"></div>
+        <div id="password-common-text" class="password-strength-text invalid"></div>
+    </form>
+</div>
+
+<script>
+function generatePassword() {
+    var length = document.getElementById("length").value;
+    if (length === "" || length < 5) {
+        document.getElementById("length-error").textContent = "Wpisz długość hasła (min. 5)";
+        return;
+    } else {
+        document.getElementById("length-error").textContent = "";
+    }
+    if (length === "" || length > 100) {
+        document.getElementById("length-error").textContent = "Wpisz długość hasła (max. 100)";
+        return;
+    } else {
+        document.getElementById("length-error").textContent = "";
+    }
+    var charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    var password = "";
+    for (var i = 0; i < length; ++i) {
+        var charIndex = Math.floor(Math.random() * charset.length);
+        password += charset[charIndex];
+    }
+    document.getElementById("result").value = password;
+    document.getElementById("result").style.display = "inline";
+}
+
+function copyPassword() {
+    var passwordField = document.getElementById("result");
+    passwordField.select();
+    document.execCommand("copy");
+    alert("Hasło skopiowane do schowka!");
+}
+
+function checkPasswordStrength() {
+    var password = encodeURIComponent(document.getElementById('password').value);
+    var meter = document.getElementById('password-strength-bar');
+    var text = document.getElementById('password-strength-text');
+    var commonText
+    var commonText = document.getElementById('password-common-text');
+
+    var minLength = 8;
+    var minUpperCase = 1;
+    var minLowerCase = 1;
+    var minNumbers = 1;
+    var minSymbols = 1;
+
+    var score = 0;
+
+    if (password.length >= minLength) score += 1;
+    if (password.match(/[A-Z]/)) score += 1;
+    if (password.match(/[a-z]/)) score += 1;
+    if (password.match(/[0-9]/)) score += 1;
+    if (password.match(/[^A-Za-z0-9]/)) score += 1;
+
+    var strengthClasses = ['very-weak', 'weak', 'medium', 'strong', 'very-strong'];
+    var strengthTexts = ['Bardzo Słabe', 'Słabe', 'Średnie', 'Silne', 'Bardzo Silne'];
+
+    meter.className = 'password-strength-bar';
+    text.textContent = '';
+    commonText.textContent = '';
+
+    if (password.length === 0) {
+        meter.style.width = '0%';
+    } else {
+        var scorePercentage = (score / 5) * 100;
+        if (scorePercentage > 100) {
+            scorePercentage = 100;
+        }
+        var strengthIndex = Math.floor(scorePercentage / 20);
+        meter.classList.add(strengthClasses[strengthIndex]);
+        meter.style.width = scorePercentage + '%';
+        text.textContent = strengthTexts[strengthIndex];
+    }
+
+    var commonPasswords = [];
+    var xhr = new XMLHttpRequest();
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                commonPasswords = xhr.responseText.split('\n').map(function(password) {
+                    return password.trim();
+                });
+                evaluatePassword(); 
+            } else {
+                console.error('Nie załadowano bazy danych haseł.');
+            }
+        }
+    };
+    xhr.open('GET', 'assets/passwords.txt', true);
+    xhr.send();
+
+    function evaluatePassword() {
+        if (commonPasswords.includes(password.toLowerCase())) {
+            commonText.textContent = 'To hasło jest powszechnie używane.';
+            commonText.classList.add('invalid');
+        } else {
+            commonText.textContent = 'Nie znaleziono tego hasła w upublicznionych bazach danych haseł!';
+            commonText.classList.remove('invalid');
+        }
+    }
+}
+
+function togglePasswordVisibility() {
+    var passwordInput = document.getElementById('password');
+    var eyeIcon = document.getElementById('eyeIcon');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.innerHTML = '&#128064;';
+    } else {
+        passwordInput.type = 'password';
+        eyeIcon.innerHTML = '&#128065;';
+    }
+}
+</script>
+
+</body>
+</html>
